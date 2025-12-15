@@ -1,5 +1,15 @@
 from rest_framework import serializers
 from .models import Tarefa
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['username'] = user.username
+        token['email'] = user.email
+        token['is_staff'] = user.is_staf
+        return token
 
 class TarefaSerializer(serializers.ModelSerializer):
     titulo = serializers.CharField(
@@ -10,6 +20,7 @@ class TarefaSerializer(serializers.ModelSerializer):
             'max_length': 'O título não pode ter mais de 200 caracteres.'
             }
         )
+    user = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Tarefa
         fields = ['id', 'user', 'titulo', 'concluida', 'criada_em']
@@ -40,3 +51,5 @@ class TarefaSerializer(serializers.ModelSerializer):
 
         
         return value
+    
+    
