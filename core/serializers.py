@@ -1,55 +1,66 @@
 from rest_framework import serializers
-from .models import Tarefa
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.utils import timezone
+from .models import Tarefa
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token['username'] = user.username
-        token['email'] = user.email
-        token['is_staff'] = user.is_staf
-        return token
+
+
 
 class TarefaSerializer(serializers.ModelSerializer):
-    titulo = serializers.CharField(
-        max_length=200,
-        error_messages={
-            'required': 'O título é obrigatório.',
-            'blank': 'O título não pode ser vazio.',
-            'max_length': 'O título não pode ter mais de 200 caracteres.'
-            }
-        )
+    """
+    Serializer para o Model Tarefa.
+    Responsabilidades:
+    1. Converter Tarefa → JSON (serialização)
+    2. Converter JSON → Tarefa (desserialização)
+    3. Validar dados de entrada
+    """
+    """
+    Serializer para Tarefa com segurança.
+    O campo 'user' é exibido (read-only) mas NÃO aceito na entrada."""
+    # 1. Mostra o username do usuário em vez do ID (read-only na saída)
     user = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Tarefa
-        fields = ['id', 'user', 'titulo', 'concluida', 'criada_em']
-        read_only_fields = ['id', 'criada_em']
-        
+        fields = ["id","user","titulo","descricao","concluida","prioridade","prazo","criada_em","data_conclusao","deletada",]
+    
+        read_only_fields = ["id", 'user', "criada_em"]
 
-    def validate_titulo(self, value):
-        """
-        Validação customizada para o campo 'titulo'.
-        Regras:
-        - Não pode ser vazio (após strip)
-        - Não pode conter apenas números
-        - Deve ter pelo menos 3 caracteres
-        """
-        value = value.strip()
-        if not value:
-            raise serializers.ValidationError(
-                "O título não pode ser vazio ou conter apenas espaços."
-            )
-        if len(value) < 3:
-            raise serializers.ValidationError(
-                "O título deve ter pelo menos 3 caracteres."
-            )
-        if value.isdigit():
-            raise serializers.ValidationError(
-                "O título não pode conter apenas números."
-            )
+    
+    def create(self, validated_data):
+        
+        concluida = validated_data.get("concluida", False)
+        if concluida:
+            validated_data["data_conclusao"] = timezone.now()
+        return super().create(validated_data)
+
+    
+    def update(self, instance, validated_data):
+        concluida = validated_data.get("concluida", instance.concluida)
 
         
-        return value
-    
-    
+        if concluida and not instance.data_conclusao:
+            instance.data_conclusao = timezone.now()
+
+        
+        if not concluida:
+            instance.data_conclusao = None
+
+        return super().update(instance, validated_data)
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Serializer customizado para incluir campos extras no JWT."""
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Adicionar campos customizados ao payload
+        token['username'] = user.username
+        token['email'] = user.email
+        token['is_staff'] = user.is_staff
+        return token
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """View que usa o serializer customizado."""
+
+    serializer_class = CustomTokenObtainPairSerializer
