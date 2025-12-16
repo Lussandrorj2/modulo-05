@@ -14,25 +14,28 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from core.views import CustomTokenObtainPairView
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView, # Login (obter access e refresh tokens)
-    TokenRefreshView, # Renovar token
-)
+from core.views import (TarefaListCreateAPIView,TarefaRetrieveUpdateDestroyAPIView,LogoutView,CustomTokenObtainPairView,)
+ # Login (obter access e refresh tokens) # Renovar token
+from rest_framework_simplejwt.views import (TokenObtainPairView,TokenRefreshView,)
+from rest_framework_simplejwt.views import TokenRefreshView
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/token',
-         TokenObtainPairView.as_view(),
-         name='token_obtain_pair'),
-    path('api/token/refresh',
-         TokenRefreshView.as_view(),
-         name='token_refresh'),
-    path('api/token/',
-         CustomTokenObtainPairView.as_view(), 
-         name='token_obtain_pair'),
-    path('api/', include('core.urls')),
+# Admin do Django
+path('admin/', admin.site.urls),
+# URLs do app core (prefixo: /api/)
+path('api/', include('core.urls')),
+# JWT: Endpoints de autenticação
+path('api/token/',TokenObtainPairView.as_view(),name='token_obtain_pair'),
+path('api/token/refresh/',TokenRefreshView.as_view(),name='token_refresh'),
+path('api/token/',CustomTokenObtainPairView.as_view(), # ← View customizada
+ name='token_obtain_pair'),
+path('tarefas/', TarefaListCreateAPIView.as_view(), name='tarefa-list-create'),
+path('tarefas/<int:pk>/', TarefaRetrieveUpdateDestroyAPIView.as_view(), name='tarefa-detail'),
+path('logout/', LogoutView.as_view(), name='logout'), # ← Novo endpoint
+# App core
+path('api/', include('core.urls')),
+
 ]
