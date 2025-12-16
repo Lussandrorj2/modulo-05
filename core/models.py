@@ -25,6 +25,11 @@ class Tarefa(models.Model):
     verbose_name='Criada em'
     )
 
+    descricao = models.TextField(
+        blank=True,
+          null=True
+          verbose_name='Descrição'
+    )
     class Meta:
         verbose_name = 'Tarefa'
         verbose_name_plural = 'Tarefas'
