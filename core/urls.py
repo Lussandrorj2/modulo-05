@@ -1,10 +1,15 @@
 from django.urls import path
-from .views import ListaTarefasAPIView
-from .views import LogoutView, TarefaListCreateAPIView, TarefaRetrieveUpdateDestroyAPIView
+from .views import (
+    TarefaListCreateAPIView,
+    TarefaRetrieveUpdateDestroyAPIView,
+    ContagemTarefasAPIView,
+)
 
 app_name = 'core'
+
 urlpatterns = [
-    path('tarefas/', ListaTarefasAPIView.as_view(), name='lista-tarefas'),
-    path('tarefas/<int:pk>/', TarefaRetrieveUpdateDestroyAPIView.as_view(), name='tarefa-detail'),
-    path('logout/', LogoutView.as_view(), name='logout'), # ← Novo endpoint
+    path('tarefas/', TarefaListCreateAPIView.as_view(), name='lista-tarefas'),
+    path('tarefas/<int:pk>/', TarefaRetrieveUpdateDestroyAPIView.as_view(), name='detalhe-tarefa'),
+    path('tarefas/contagem/', ContagemTarefasAPIView.as_view(), name='contagem-tarefas'),
+    
 ]
