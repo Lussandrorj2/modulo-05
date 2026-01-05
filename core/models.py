@@ -70,3 +70,5 @@ class Tarefa(models.Model):
             raise ValidationError(
                 "O prazo é obrigatório quando a tarefa não está concluída."
             )
+    def __str__(self):
+        return f"{self.titulo} ({'✓' if self.concluida else '✗'})"
